@@ -1,10 +1,19 @@
+export interface IUser {
+    id: number,
+    username: string
+}
+
 /**
  * @class User
  * */
-export class User {
+export class User implements IUser {
+    id: number;
+    username: string;
+
     /**
      * @class User
-     * @param name {string}
+     * @param username {string}
+     * @param id {number}
      * */
-    constructor(private name: string) {}
+    constructor(username: string, id: number) {}
 }

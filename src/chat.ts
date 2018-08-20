@@ -2,6 +2,7 @@ import {createServer, Server} from 'http';
 import * as express from 'express';
 import { Message } from './model/message';
 import { User } from './model/user';
+import { File } from './model/file';
 import * as SocketIO from "socket.io";
 import * as Redis from "redis";
 import {RedisClient} from "redis";
@@ -79,24 +80,24 @@ export class ChartServer {
      * */
     private checkRedisEvent(socket: any, client: Redis.RedisClient) {
         const $this = this;
-        client.get("event_update_comment_goods", function(err, data) {
-            $this.sendMessage(err, data, client, "event_update_comment_goods");
-        });
         client.get("event_create_comment_goods", function(err, data) {
-            $this.sendMessage(err, data, client, "event_create_comment_goods");
+            $this.sendMessage(err, JSON.parse(data), client, "event_create_comment_goods");
+        });
+        client.get("event_update_comment_goods", function(err, data) {
+            $this.sendMessage(err, JSON.parse(data), client, "event_update_comment_goods");
         });
         client.get("event_remove_comment_goods", function(err, data) {
-            $this.sendMessage(err, data, client, "event_remove_comment_goods");
+            $this.sendMessage(err, JSON.parse(data), client, "event_remove_comment_goods");
         });
 
         client.get("event_create_comment_order", function(err, data) {
-            $this.sendMessage(err, data, client, "event_create_comment_order");
+            $this.sendMessage(err, JSON.parse(data), client, "event_create_comment_order");
         });
-        client.get("event_create_comment_update", function(err, data) {
-            $this.sendMessage(err, data, client, "event_create_comment_update");
+        client.get("event_update_comment_order", function(err, data) {
+            $this.sendMessage(err, JSON.parse(data), client, "event_update_comment_order");
         });
         client.get("event_remove_comment_order", function(err, data) {
-            $this.sendMessage(err, data, client, "event_remove_comment_order");
+            $this.sendMessage(err, JSON.parse(data), client, "event_remove_comment_order");
         });
         this.timeOut = setTimeout(function () {
             $this.checkRedisEvent(socket, client);
@@ -105,18 +106,18 @@ export class ChartServer {
 
     /**
      * @param err {Error | null}
-     * @param data {string}
+     * @param message {Message | null}
      * @param client {RedisClient}
      * @param event {string}
      * */
-    private sendMessage(err: Error | null, data: string, client: Redis.RedisClient, event: string) {
+    private sendMessage(err: Error | null, message: Message | null, client: Redis.RedisClient, event: string) {
         const $this = this;
         if(err) {
             console.error(err);
         }
-        if(data) {
-            console.log(data);
-            $this.io.emit('message', new Message(new User("username"), data));
+        if(message) {
+            console.log(message);
+            $this.io.emit('message', message);
         }
         client.del(event);
     }
