@@ -1,11 +1,12 @@
 import {createServer, Server} from 'http';
 import * as express from 'express';
-import { Message } from './model/message';
-import { User } from './model/user';
-import { File } from './model/file';
+import { MessageGoods, MessageOrder } from './model/message';
 import * as SocketIO from "socket.io";
 import * as Redis from "redis";
 import {RedisClient} from "redis";
+import * as socketioJwt from "socketio-jwt";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
  * @class ChartServer
@@ -61,17 +62,25 @@ export class ChartServer {
             console.log('Running server on port %s', this.port);
         });
 
-        this.io.on('connect', (socket: any) => {
-            console.log('Connected client on port %s.', this.port);
-            this.checkRedisEvent(socket, this.redisClient);
-            socket.on('disconnect', () => {
-                clearTimeout(this.timeOut);
-                this.redisClient.quit(function(){
-                    console.log('redis close');
+        this.io.
+            on('connection', socketioJwt.authorize({
+                secret: process.env.SECRET_KEY,
+                timeout: 15000,
+                decodedPropertyName: ""
+            })).on('authenticated', (socket: any) => {
+                console.log('Connected client on port %s.', this.port);
+                socket.on('join', (room: string) => {
+                    socket.join(room);
+                } );
+                this.checkRedisEvent(socket, this.redisClient);
+                socket.on('disconnect', () => {
+                    clearTimeout(this.timeOut);
+                    this.redisClient.quit(function(){
+                        console.log('redis close');
+                    });
+                    console.log('Client disconnected');
                 });
-                console.log('Client disconnected');
             });
-        });
     }
 
     /**
@@ -106,18 +115,21 @@ export class ChartServer {
 
     /**
      * @param err {Error | null}
-     * @param message {Message | null}
+     * @param message {MessageOrder | MessageGoods | null}
      * @param client {RedisClient}
      * @param event {string}
      * */
-    private sendMessage(err: Error | null, message: Message | null, client: Redis.RedisClient, event: string) {
+    private sendMessage(err: Error | null, message: MessageOrder | MessageGoods | null, client: Redis.RedisClient, event: string) {
         const $this = this;
         if(err) {
             console.error(err);
         }
         if(message) {
-            console.log(message);
-            $this.io.emit('message', message);
+            if(message instanceof MessageOrder) {
+                $this.io.sockets.in("chat_order_" + message.order_id).emit('message', message);
+            } else {
+                $this.io.sockets.in("chat_goods_" + message.goods_id).emit('message', message);
+            }
         }
         client.del(event);
     }
