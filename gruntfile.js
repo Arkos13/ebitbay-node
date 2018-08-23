@@ -10,9 +10,11 @@ module.exports = function (grunt) {
                 }],
                 options: {
                     module: "commonjs",
-                    target: "es6",
+                    target: "es5",
                     sourceMap: false,
-                    rootDir: "src"
+                    rootDir: "src",
+                    experimentalDecorators: true,
+                    lib: ["es2015"]
                 }
             }
         },

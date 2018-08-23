@@ -71,11 +71,12 @@ export class ChartServer {
                 console.log('Connected client on port %s.', this.port);
                 socket.on('join', (room: string) => {
                     socket.join(room);
-                } );
+                    console.log('Join to room ' + room);
+                });
                 this.checkRedisEvent(socket, this.redisClient);
                 socket.on('disconnect', () => {
                     clearTimeout(this.timeOut);
-                    this.redisClient.quit(function(){
+                    this.redisClient.quit(() => {
                         console.log('redis close');
                     });
                     console.log('Client disconnected');
@@ -87,7 +88,8 @@ export class ChartServer {
      * @param socket
      * @param client {RedisClient}
      * */
-    private checkRedisEvent(socket: any, client: Redis.RedisClient) {
+    private checkRedisEvent(socket: any, client: Redis.RedisClient) : boolean | void {
+        if(socket.connected) return false;
         const $this = this;
         client.get("event_create_comment_goods", function(err, data) {
             $this.sendMessage(err, JSON.parse(data), client, "event_create_comment_goods");
