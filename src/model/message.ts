@@ -1,5 +1,6 @@
 import {User} from "./User";
 import {File} from "./File";
+import {Serializable} from "../Helper/Serializable";
 
 export interface IMessage {
     id: number,
@@ -14,7 +15,7 @@ export interface IMessage {
 /**
  * @class MessageGoods
  * */
-export class MessageGoods implements IMessage {
+export class MessageGoods extends Serializable implements IMessage {
 
     id: number;
     comment: string;
@@ -27,29 +28,14 @@ export class MessageGoods implements IMessage {
 
     /**
      * @class Message
-     * @param user {User}
-     * @param comment {string}
-     * @param id {number}
-     * @param files {File[]}
-     * @param created {string}
-     * @param updated {string}
-     * @param type {string}
-     * @param goods_id {number}
      * */
-    constructor(user: User,
-                id: number,
-                goods_id: number,
-                comment: string,
-                files: File[],
-                updated: string,
-                created: string,
-                type: string) {}
+    constructor() { super(); }
 }
 
 /**
  * @class MessageOrder
  * */
-export class MessageOrder implements IMessage {
+export class MessageOrder extends Serializable implements IMessage {
 
     id: number;
     comment: string;
@@ -62,21 +48,6 @@ export class MessageOrder implements IMessage {
 
     /**
      * @class Message
-     * @param user {User}
-     * @param comment {string}
-     * @param id {number}
-     * @param files {File[]}
-     * @param created {string}
-     * @param updated {string}
-     * @param type {string}
-     * @param order_id {number}
      * */
-    constructor(user: User,
-                id: number,
-                order_id: number,
-                comment: string,
-                files: File[],
-                updated: string,
-                created: string,
-                type: string) {}
+    constructor() { super(); }
 }

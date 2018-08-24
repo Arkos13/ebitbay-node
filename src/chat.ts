@@ -8,6 +8,8 @@ import * as socketioJwt from "socketio-jwt";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+type typeMessage = "Order" | "Goods";
+
 /**
  * @class ChartServer
  * */
@@ -89,26 +91,25 @@ export class ChartServer {
      * @param client {RedisClient}
      * */
     private checkRedisEvent(socket: any, client: Redis.RedisClient) : boolean | void {
-        if(socket.connected) return false;
         const $this = this;
         client.get("event_create_comment_goods", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_create_comment_goods");
+            $this.sendMessage(err, data, client, "event_create_comment_goods", "Goods");
         });
         client.get("event_update_comment_goods", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_update_comment_goods");
+            $this.sendMessage(err, data, client, "event_update_comment_goods", "Goods");
         });
         client.get("event_remove_comment_goods", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_remove_comment_goods");
+            $this.sendMessage(err, data, client, "event_remove_comment_goods", "Goods");
         });
 
         client.get("event_create_comment_order", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_create_comment_order");
+            $this.sendMessage(err, data, client, "event_create_comment_order", "Order");
         });
         client.get("event_update_comment_order", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_update_comment_order");
+            $this.sendMessage(err, data, client, "event_update_comment_order", "Order");
         });
         client.get("event_remove_comment_order", function(err, data) {
-            $this.sendMessage(err, JSON.parse(data), client, "event_remove_comment_order");
+            $this.sendMessage(err, data, client, "event_remove_comment_order", "Order");
         });
         this.timeOut = setTimeout(function () {
             $this.checkRedisEvent(socket, client);
@@ -117,20 +118,25 @@ export class ChartServer {
 
     /**
      * @param err {Error | null}
-     * @param message {MessageOrder | MessageGoods | null}
+     * @param data {string | null}
      * @param client {RedisClient}
      * @param event {string}
+     * @param typeMessage {typeMessage}
      * */
-    private sendMessage(err: Error | null, message: MessageOrder | MessageGoods | null, client: Redis.RedisClient, event: string) {
+    private sendMessage(err: Error | null, data: string | null, client: Redis.RedisClient, event: string, typeMessage: typeMessage) {
         const $this = this;
         if(err) {
             console.error(err);
         }
-        if(message) {
-            if(message instanceof MessageOrder) {
-                $this.io.sockets.in("chat_order_" + message.order_id).emit('message', message);
+        if(data) {
+            if(typeMessage === "Order") {
+                let message = new MessageOrder();
+                message.fillFromJSON(data);
+                $this.io.sockets.in("chat_order_" + message.order_id).emit('message', {message: message, event: event});
             } else {
-                $this.io.sockets.in("chat_goods_" + message.goods_id).emit('message', message);
+                let message = new MessageGoods();
+                message.fillFromJSON(data);
+                $this.io.sockets.in("chat_goods_" + message.goods_id).emit('message', {message: message, event: event});
             }
         }
         client.del(event);
