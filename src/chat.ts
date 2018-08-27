@@ -6,6 +6,8 @@ import * as Redis from "redis";
 import {RedisClient} from "redis";
 import * as socketioJwt from "socketio-jwt";
 import * as dotenv from "dotenv";
+import * as ss from "socket.io-stream"
+import * as fs from "fs";
 dotenv.config();
 
 type typeMessage = "Order" | "Goods";
@@ -53,6 +55,7 @@ export class ChartServer {
 
     private config() : void {
         this.port = process.env.PORT || 8080;
+        this.app.use(express.static(`${__dirname}`));
     }
 
     private sockets() {
@@ -83,7 +86,25 @@ export class ChartServer {
                     });
                     console.log('Client disconnected');
                 });
+                this.onStreamAudio(socket);
+                this.onStreamVideo(socket);
             });
+    }
+
+    private onStreamAudio(socket: any) {
+        socket.on('stream', function (data) {
+            var stream = ss.createStream();
+            var filename =  __dirname + '/../client/audio.mp3' ;
+            ss(socket).emit('audio-stream', stream, { name: filename });
+            fs.createReadStream(filename).pipe(stream);
+        });
+    }
+
+    private onStreamVideo(socket: any) {
+        const $this = this;
+        socket.on('stream-video',function(image){
+            $this.io.sockets.in("stream_video").emit('stream',image);
+        });
     }
 
     /**
