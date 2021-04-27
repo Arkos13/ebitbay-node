@@ -25,7 +25,7 @@
     "morgan": ">=1.9.1 ",
     "mysql2": "^1.5.3",
     "pug": "2.0.0-beta11",
-    "redis": "^2.8.0",
+    "redis": "^3.1.1",
     "sequelize": ">=5.8.8",
     "socket.io": "^2.1.1",
     "socket.io-stream": "^0.9.1",
